@@ -1,0 +1,72 @@
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  /* optional: prevents scroll if not needed */
+}
+
+.gridView {
+  max-height: 616px;
+}
+
+.appStyle {
+  display: flex;
+  height: 88vh;
+}
+
+.leftColumnStyle {
+  flex: 0 0 256px;
+  background-color: pink;
+}
+
+.centerColumnStyle {
+  flex: 1;
+  background-color: black;
+  overflow-y: auto;
+}
+
+.rightColumnStyle {
+  flex: 0 0 240px;
+  background-color: orange;
+}
+
+.overlayIconStyle {
+  position: absolute;
+  top: 0%;
+  right: 0%;
+  background-color: white;
+}
+
+.container {
+  position: 'relative';
+  display: 'inline-block';
+}
+
+.gridItemStyle {
+  width: 100%;
+  height: 100%;
+  background-color: #A9A9A9;
+  border: 2px solid #909090;
+  box-sizing: border-box;
+}
+
+.toolbarIconButtonContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  background-color: darkgray;
+  height: 10vh;
+}
+
+.disabled {
+  opacity: 0.5;
+  /* Reduce opacity to visually indicate disabled state */
+  color: gray;
+  /* Change text color to gray */
+  pointer-events: none;
+  /* Disable pointer events to prevent interaction */
+}
