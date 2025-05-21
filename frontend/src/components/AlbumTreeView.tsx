@@ -1,6 +1,7 @@
-import { TreeView, TreeItem } from '@mui/lab';
+import { SimpleTreeView, TreeItem } from '@mui/x-tree-view';
 import { ExpandMore, ChevronRight } from '@mui/icons-material';
 import { AlbumNode } from '../types/AlbumTree';
+import { SvgIconProps } from '@mui/material/SvgIcon';
 
 interface Props {
   nodes: AlbumNode[];
@@ -9,24 +10,30 @@ interface Props {
 const renderTree = (node: AlbumNode) => {
   if (node.type === 'group') {
     return (
-      <TreeItem key={node.id} nodeId={node.id} label={node.name}>
+      <TreeItem key={node.id} itemId={node.id} label={node.name}>
         {node.children.map(child => renderTree(child))}
       </TreeItem>
     );
   } else {
     return (
-      <TreeItem key={node.id} nodeId={node.id} label={`${node.name} (${node.mediaCount})`} />
+      <TreeItem
+        key={node.id}
+        itemId={node.id}
+        label={`${node.name} (${node.mediaCount})`}
+      />
     );
   }
 };
 
 export default function AlbumTreeView({ nodes }: Props) {
   return (
-    <TreeView
-      defaultCollapseIcon={<ExpandMore />}
-      defaultExpandIcon={<ChevronRight />}
+    <SimpleTreeView
+      slots={{
+        expandIcon: ChevronRight as React.ComponentType<SvgIconProps>,
+        collapseIcon: ExpandMore as React.ComponentType<SvgIconProps>,
+      }}
     >
       {nodes.map(renderTree)}
-    </TreeView>
+    </SimpleTreeView>
   );
 }
