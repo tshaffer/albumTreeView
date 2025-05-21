@@ -1,29 +1,34 @@
-import { bindActionCreators } from 'redux';
-import { connect } from 'react-redux';
-import { TemplateTreeViewDispatch, setAppInitialized } from "../models";
-import { getAppInitialized } from '../selectors';
+import AlbumTreeView from './AlbumTreeView';
+import { AlbumNode } from '../types/AlbumTree';
 
-export interface AppShellProps {
-  appInitialized: boolean;
-  onSetAppInitialized: () => any;
-}
+const dummyData: AlbumNode[] = [
+  {
+    id: 'australia',
+    name: 'Australia',
+    type: 'group',
+    children: [
+      {
+        id: 'sydney',
+        name: 'Sydney',
+        type: 'group',
+        children: [
+          {
+            id: 'day1',
+            name: 'Day 1 - Arrival',
+            type: 'album',
+            mediaCount: 45,
+          },
+        ],
+      },
+    ],
+  },
+];
 
-const AppShell = (props: AppShellProps) => {
+const AppShell = () => {
   return (
-    <div>pizza pie</div>
+    <div style={{ padding: '16px' }}>
+      <h1>Album Tree</h1>
+      <AlbumTreeView nodes={dummyData} />
+    </div>
   );
-}
-
-function mapStateToProps(state: any) {
-  return {
-    appInitialized: getAppInitialized(state),
-  };
-}
-
-const mapDispatchToProps = (dispatch: TemplateTreeViewDispatch) => {
-  return bindActionCreators({
-    onSetAppInitialized: setAppInitialized,
-  }, dispatch);
 };
-
-export default connect(mapStateToProps, mapDispatchToProps)(AppShell);

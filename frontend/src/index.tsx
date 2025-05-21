@@ -1,37 +1,21 @@
-import * as React from 'react';
-import { createRoot } from 'react-dom/client';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
-
-import { createStore, applyMiddleware } from 'redux';
-
+import React from 'react';
+import ReactDOM from 'react-dom/client';
 import { Provider } from 'react-redux';
-import thunkMiddleware from 'redux-thunk';
-import { rootReducer } from './models';
-
+import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
 import AppShell from './components/AppShell';
+import { store } from './models/store';
 
-import { composeWithDevTools } from 'redux-devtools-extension';
-import { initializeDiagnostics } from './utilities';
+// Optional: customize your MUI theme if needed
+const theme = createTheme();
 
-window.React = React;
-
-initializeDiagnostics();
-
-export const store = createStore(
-  rootReducer,
-  composeWithDevTools(
-    applyMiddleware(thunkMiddleware)
-  ));
-
-const container = document.getElementById('content');
-const root = createRoot(container!);
-
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 root.render(
-  <Provider store={store}>
-    <BrowserRouter>
-      <Routes>
-        <Route path='/' element={<AppShell />} />
-      </Routes>
-    </BrowserRouter>
-  </Provider>,
+  <React.StrictMode>
+    <Provider store={store}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <AppShell />
+      </ThemeProvider>
+    </Provider>
+  </React.StrictMode>
 );
