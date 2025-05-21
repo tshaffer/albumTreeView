@@ -1,2 +1,2 @@
-export * from './slices/albumTreeSlice'
+export * from './albumTreeSlice'
 export * from './store';

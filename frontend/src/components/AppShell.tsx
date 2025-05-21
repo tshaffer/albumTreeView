@@ -1,6 +1,10 @@
+import React from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '../models/store';
 import AlbumTreeView from './AlbumTreeView';
 import { AlbumNode } from '../types/AlbumTree';
 
+// Temporary static data to visualize the tree
 const dummyData: AlbumNode[] = [
   {
     id: 'australia',
@@ -18,6 +22,25 @@ const dummyData: AlbumNode[] = [
             type: 'album',
             mediaCount: 45,
           },
+          {
+            id: 'day2',
+            name: 'Day 2 - Harbor Walk',
+            type: 'album',
+            mediaCount: 38,
+          },
+        ],
+      },
+      {
+        id: 'noosa',
+        name: 'Noosa',
+        type: 'group',
+        children: [
+          {
+            id: 'day3',
+            name: 'Day 3 - Beach',
+            type: 'album',
+            mediaCount: 50,
+          },
         ],
       },
     ],
@@ -25,10 +48,15 @@ const dummyData: AlbumNode[] = [
 ];
 
 const AppShell = () => {
+  // Replace this with actual Redux state later if needed
+  // const albumTree = useSelector((state: RootState) => state.albumTree.root);
+
   return (
     <div style={{ padding: '16px' }}>
-      <h1>Album Tree</h1>
+      <h1>Album Tree View</h1>
       <AlbumTreeView nodes={dummyData} />
     </div>
   );
 };
+
+export default AppShell;

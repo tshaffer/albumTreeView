@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { AlbumNode } from '../../types/AlbumTree';
+import { AlbumNode } from '../types/AlbumTree';
 
 interface AlbumTreeState {
   root: AlbumNode[]; // Multiple top-level groups allowed

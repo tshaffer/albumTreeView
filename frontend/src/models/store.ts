@@ -1,10 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit';
-import albumTreeSliceReducer from './slices/albumTreeSlice';
+import albumTreeReducer from './albumTreeSlice';
 
 export const store = configureStore({
   reducer: {
-    albumTreeState: albumTreeSliceReducer,
+    albumTree: albumTreeReducer,
   },
 });
 
-export default store;
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
