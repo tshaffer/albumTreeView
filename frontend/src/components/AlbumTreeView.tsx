@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { startImport, finishImport } from '../redux/importSlice';
-import { markAlbumImported, addAlbum } from '../redux/albumTreeSlice';
+import { markAlbumImported, addAlbum, addGroup } from '../redux/albumTreeSlice';
 import { RootState } from '../redux/store';
 import { AlbumNode } from '../types/AlbumTree';
 
@@ -37,6 +37,10 @@ export default function AlbumTreeView() {
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+
+  const [addGroupDialogOpen, setAddGroupDialogOpen] = useState(false);
+  const [newGroupName, setNewGroupName] = useState('');
+
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [newAlbumName, setNewAlbumName] = useState('');
 
@@ -98,6 +102,14 @@ export default function AlbumTreeView() {
         >
           Add Album
         </Button>
+
+        <Button
+          variant="outlined"
+          onClick={() => setAddGroupDialogOpen(true)}
+        >
+          Add Group
+        </Button>
+
       </div>
 
       <Dialog open={addDialogOpen} onClose={() => setAddDialogOpen(false)}>
@@ -125,6 +137,33 @@ export default function AlbumTreeView() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Dialog open={addGroupDialogOpen} onClose={() => setAddGroupDialogOpen(false)}>
+        <DialogTitle>Add New Group</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            fullWidth
+            label="Group Name"
+            value={newGroupName}
+            onChange={(e) => setNewGroupName(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddGroupDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={() => {
+              dispatch(addGroup({ name: newGroupName, parentId: selectedId ?? undefined }));
+              setNewGroupName('');
+              setAddGroupDialogOpen(false);
+            }}
+            disabled={!newGroupName.trim()}
+          >
+            Add
+          </Button>
+        </DialogActions>
+      </Dialog>
+
 
       <Snackbar
         open={snackbarOpen}
