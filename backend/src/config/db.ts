@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // CHANGE_ME
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/dbName';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/albumTree';
 
 let connection: mongoose.Connection;
 

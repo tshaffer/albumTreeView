@@ -1,24 +1,11 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
-
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { v4 as uuidv4 } from 'uuid';
+import axios from 'axios';
 import { AlbumNode } from '../types/AlbumTree';
-
-export const loadAlbumTree = createAsyncThunk('albumTree/load', async () => {
-  const res = await axios.get('/api/album-tree');
-  return res.data.nodes;
-});
-
-export const saveAlbumTree = createAsyncThunk(
-  'albumTree/save',
-  async (nodes: AlbumNode[]) => {
-    await axios.put('/api/album-tree', { nodes });
-  }
-);
 
 interface AlbumTreeState {
   nodes: AlbumNode[];
+  status: 'idle' | 'loading' | 'succeeded' | 'failed';
 }
 
 interface AddAlbumPayload {
@@ -32,27 +19,40 @@ interface AddGroupPayload {
 }
 
 const initialState: AlbumTreeState = {
-  nodes: [
-    {
-      id: '1',
-      name: '2024',
-      type: 'group',
-      children: [
-        { id: '2', name: 'January', type: 'album', mediaCount: 20 },
-        { id: '3', name: 'February', type: 'album', mediaCount: 12 },
-      ],
-    },
-    {
-      id: '4',
-      name: 'Trips',
-      type: 'group',
-      children: [
-        { id: '5', name: 'Hawaii', type: 'album', mediaCount: 42 },
-      ],
-    },
-  ],
+  nodes: [],
+  status: 'idle',
 };
 
+// ✅ Async Thunks
+export const loadAlbumTree = createAsyncThunk('albumTree/load', async () => {
+  const response = await axios.get('/api/album-tree');
+  return response.data.nodes as AlbumNode[];
+});
+
+export const saveAlbumTree = createAsyncThunk('albumTree/save', async (nodes: AlbumNode[]) => {
+  await axios.put('/api/album-tree', { nodes });
+});
+
+// ✅ Utility
+const findAndInsert = (
+  nodes: AlbumNode[],
+  parentId: string | undefined,
+  newNode: AlbumNode
+): boolean => {
+  for (const node of nodes) {
+    if (node.type === 'group' && node.id === parentId) {
+      node.children.push(newNode);
+      return true;
+    }
+    if (node.type === 'group') {
+      const added = findAndInsert(node.children, parentId, newNode);
+      if (added) return true;
+    }
+  }
+  return false;
+};
+
+// ✅ Slice
 const albumTreeSlice = createSlice({
   name: 'albumTree',
   initialState,
@@ -77,24 +77,8 @@ const albumTreeSlice = createSlice({
         type: 'album',
         mediaCount: 0,
       };
-
-      const addToParent = (nodes: AlbumNode[]): boolean => {
-        for (const node of nodes) {
-          if (node.type === 'group' && node.id === action.payload.parentId) {
-            node.children.push(newAlbum);
-            return true;
-          }
-          if (node.type === 'group') {
-            const added = addToParent(node.children);
-            if (added) return true;
-          }
-        }
-        return false;
-      };
-
-      if (!action.payload.parentId || !addToParent(state.nodes)) {
-        state.nodes.push(newAlbum); // fallback to root
-      }
+      const added = findAndInsert(state.nodes, action.payload.parentId, newAlbum);
+      if (!added) state.nodes.push(newAlbum);
     },
 
     addGroup(state, action: PayloadAction<AddGroupPayload>) {
@@ -104,27 +88,25 @@ const albumTreeSlice = createSlice({
         type: 'group',
         children: [],
       };
-
-      const addToParent = (nodes: AlbumNode[]): boolean => {
-        for (const node of nodes) {
-          if (node.type === 'group' && node.id === action.payload.parentId) {
-            node.children.push(newGroup);
-            return true;
-          }
-          if (node.type === 'group') {
-            const added = addToParent(node.children);
-            if (added) return true;
-          }
-        }
-        return false;
-      };
-
-      if (!action.payload.parentId || !addToParent(state.nodes)) {
-        state.nodes.push(newGroup); // fallback to root
-      }
+      const added = findAndInsert(state.nodes, action.payload.parentId, newGroup);
+      if (!added) state.nodes.push(newGroup);
     },
+  },
+
+  extraReducers: builder => {
+    builder
+      .addCase(loadAlbumTree.pending, state => {
+        state.status = 'loading';
+      })
+      .addCase(loadAlbumTree.fulfilled, (state, action) => {
+        state.nodes = action.payload;
+        state.status = 'succeeded';
+      })
+      .addCase(loadAlbumTree.rejected, state => {
+        state.status = 'failed';
+      });
   },
 });
 
-export const { markAlbumImported, addAlbum, addGroup } = albumTreeSlice.actions;
+export const { addAlbum, addGroup, markAlbumImported } = albumTreeSlice.actions;
 export default albumTreeSlice.reducer;

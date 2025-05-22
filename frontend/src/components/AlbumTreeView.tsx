@@ -12,11 +12,12 @@ import {
   TextField,
   Button,
 } from '@mui/material';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { startImport, finishImport } from '../redux/importSlice';
 import { markAlbumImported, addAlbum, addGroup, saveAlbumTree } from '../redux/albumTreeSlice';
 import { RootState } from '../redux/store';
 import { AlbumNode } from '../types/AlbumTree';
+import { useAppDispatch } from '../redux/hooks';
 
 const mockImportAlbum = async (albumId: string): Promise<void> => {
   console.log(`Starting mock import for album ${albumId}`);
@@ -29,7 +30,7 @@ const mockImportAlbum = async (albumId: string): Promise<void> => {
 };
 
 export default function AlbumTreeView() {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
   const nodes = useSelector((state: RootState) => state.albumTree.nodes);
   const importingAlbumId = useSelector((state: RootState) => state.import.importingAlbumId);
