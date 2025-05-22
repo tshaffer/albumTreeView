@@ -8,11 +8,11 @@ interface Props {
   nodes: AlbumNode[];
 }
 
-const renderTree = (node: AlbumNode) => {
+const renderTree = (node: AlbumNode): React.ReactNode => {
   if (node.type === 'group') {
     return (
       <TreeItem key={node.id} itemId={node.id} label={node.name}>
-        {node.children.map(child => renderTree(child))}
+        {node.children.map(renderTree)}
       </TreeItem>
     );
   } else {
@@ -32,9 +32,8 @@ export default function AlbumTreeView({ nodes }: Props) {
   return (
     <>
       <SimpleTreeView
-        selectedItems={selectedId ? [selectedId] : []}
         onSelectedItemsChange={(event, ids) => {
-          setSelectedId(ids[0] ?? null); // single selection
+          setSelectedId(ids?.[0] ?? null);
         }}
         slots={{
           expandIcon: ChevronRight as React.ComponentType<SvgIconProps>,
@@ -48,7 +47,7 @@ export default function AlbumTreeView({ nodes }: Props) {
         onClick={() => {
           if (selectedId) {
             console.log(`Import requested for album node: ${selectedId}`);
-            // Trigger import logic here
+            // Add actual import logic here
           }
         }}
         disabled={!selectedId}
