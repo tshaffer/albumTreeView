@@ -28,6 +28,17 @@ const renderTree = (node: AlbumNode): React.ReactNode => {
 
 export default function AlbumTreeView({ nodes }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+
+  const mockImportAlbum = async (albumId: string): Promise<void> => {
+    console.log(`Starting mock import for album ${albumId}`);
+    return new Promise(resolve => {
+      setTimeout(() => {
+        console.log(`Finished mock import for album ${albumId}`);
+        resolve();
+      }, 1000);
+    });
+  };
 
   return (
     <>
@@ -44,15 +55,16 @@ export default function AlbumTreeView({ nodes }: Props) {
       </SimpleTreeView>
 
       <button
-        onClick={() => {
+        onClick={async () => {
           if (selectedId) {
-            console.log(`Import requested for album node: ${selectedId}`);
-            // Add actual import logic here
+            setIsImporting(true);
+            await mockImportAlbum(selectedId);
+            setIsImporting(false);
           }
         }}
-        disabled={!selectedId}
+        disabled={!selectedId || isImporting}
       >
-        Import
+        {isImporting ? 'Importing...' : 'Import'}
       </button>
     </>
   );
