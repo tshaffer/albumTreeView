@@ -1,7 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cookieParser from 'cookie-parser'; // Parse cookies
 import dotenv from 'dotenv';
-import { createRoutes } from './routes';
 import path from 'path';
 import { Server } from 'http';
 import cors from 'cors';
