@@ -45,6 +45,12 @@ export default function AlbumTreeView() {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [newAlbumName, setNewAlbumName] = useState('');
 
+  React.useEffect(() => {
+    if (nodes.length > 0) {
+      dispatch(saveAlbumTree(nodes));
+    }
+  }, [nodes, dispatch]);
+
   const isImporting = selectedId !== null && importingAlbumId === selectedId;
 
   const handleImportClick = async () => {
@@ -129,7 +135,6 @@ export default function AlbumTreeView() {
           <Button
             onClick={() => {
               dispatch(addAlbum({ name: newAlbumName, parentId: selectedId ?? undefined }));
-              dispatch(saveAlbumTree(nodes));
               setNewAlbumName('');
               setAddDialogOpen(false);
             }}
@@ -157,7 +162,6 @@ export default function AlbumTreeView() {
             onClick={() => {
               console.log('Adding group', newGroupName, selectedId);
               dispatch(addGroup({ name: newGroupName, parentId: selectedId ?? undefined }));
-              dispatch(saveAlbumTree(nodes));
               setNewGroupName('');
               setAddGroupDialogOpen(false);
             }}
