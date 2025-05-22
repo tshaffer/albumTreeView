@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { startImport, finishImport } from '../models/importSlice';
 import { RootState } from '../models/store';
 import { AlbumNode } from '../types/AlbumTree';
+import { markAlbumImported } from '../models';
 
 interface Props {
   nodes: AlbumNode[];
@@ -22,11 +23,12 @@ const mockImportAlbum = async (albumId: string): Promise<void> => {
   });
 };
 
-export default function AlbumTreeView({ nodes }: Props) {
+export default function AlbumTreeView() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   const dispatch = useDispatch();
+  const nodes = useSelector((state: RootState) => state.albumTree.nodes);
   const importingAlbumId = useSelector((state: RootState) => state.import.importingAlbumId);
   const completedAlbumImports = useSelector((state: RootState) => state.import.completedAlbumImports);
   const isImporting = selectedId !== null && importingAlbumId === selectedId;
@@ -36,6 +38,7 @@ export default function AlbumTreeView({ nodes }: Props) {
     dispatch(startImport(selectedId));
     await mockImportAlbum(selectedId);
     dispatch(finishImport(selectedId));
+    dispatch(markAlbumImported(selectedId));
     setSnackbarOpen(true);
   };
 

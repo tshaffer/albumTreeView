@@ -54,7 +54,7 @@ const AppShell = () => {
   return (
     <div style={{ padding: '16px' }}>
       <h1>Album Tree View</h1>
-      <AlbumTreeView nodes={dummyData} />
+      <AlbumTreeView />
     </div>
   );
 };
