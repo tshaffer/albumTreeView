@@ -1,5 +1,5 @@
 // src/redux/albumTreeSlice.ts
-import { nanoid } from 'nanoid'; // or use uuid
+import { v4 as uuidv4 } from 'uuid';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { AlbumNode } from '../types/AlbumTree';
 
@@ -41,7 +41,7 @@ const albumTreeSlice = createSlice({
   reducers: {
     addAlbum(state, action: PayloadAction<AddAlbumPayload>) {
       const newAlbum: AlbumNode = {
-        id: nanoid(),
+        id: uuidv4(),
         name: action.payload.name,
         type: 'album',
         mediaCount: 0,
