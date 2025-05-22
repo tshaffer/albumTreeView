@@ -1,6 +1,21 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createAsyncThunk } from '@reduxjs/toolkit';
+import axios from 'axios';
+
 import { v4 as uuidv4 } from 'uuid';
 import { AlbumNode } from '../types/AlbumTree';
+
+export const loadAlbumTree = createAsyncThunk('albumTree/load', async () => {
+  const res = await axios.get('/api/album-tree');
+  return res.data.nodes;
+});
+
+export const saveAlbumTree = createAsyncThunk(
+  'albumTree/save',
+  async (nodes: AlbumNode[]) => {
+    await axios.put('/api/album-tree', { nodes });
+  }
+);
 
 interface AlbumTreeState {
   nodes: AlbumNode[];

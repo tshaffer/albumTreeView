@@ -7,6 +7,8 @@ import { Server } from 'http';
 import cors from 'cors';
 const bodyParser = require('body-parser');
 
+import albumTreeRoutes from './routes/albumTree';
+
 import { connectDB } from './config/db';  // ✅ Import first
 
 dotenv.config();
@@ -26,7 +28,7 @@ const startServer = async () => {
   app.use(bodyParser.urlencoded({ extended: true }));
 
   // add routes
-  createRoutes(app);
+  // createRoutes(app);
 
   // Serve static files from the /public directory
   app.use(express.static(path.join(__dirname, '../public')));
@@ -35,6 +37,8 @@ const startServer = async () => {
   app.get('/', (req: Request, res: Response) => {
     res.sendFile(path.join(__dirname, '../public', 'index.html'));
   });
+
+  app.use('/api/album-tree', albumTreeRoutes);
 
   // Start the server
   const server: Server<any> = app.listen(PORT, () => {

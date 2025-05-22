@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { startImport, finishImport } from '../redux/importSlice';
-import { markAlbumImported, addAlbum, addGroup } from '../redux/albumTreeSlice';
+import { markAlbumImported, addAlbum, addGroup, saveAlbumTree } from '../redux/albumTreeSlice';
 import { RootState } from '../redux/store';
 import { AlbumNode } from '../types/AlbumTree';
 
@@ -128,6 +128,7 @@ export default function AlbumTreeView() {
           <Button
             onClick={() => {
               dispatch(addAlbum({ name: newAlbumName, parentId: selectedId ?? undefined }));
+              dispatch(saveAlbumTree(nodes));
               setNewAlbumName('');
               setAddDialogOpen(false);
             }}
@@ -155,6 +156,7 @@ export default function AlbumTreeView() {
             onClick={() => {
               console.log('Adding group', newGroupName, selectedId);
               dispatch(addGroup({ name: newGroupName, parentId: selectedId ?? undefined }));
+              dispatch(saveAlbumTree(nodes));
               setNewGroupName('');
               setAddGroupDialogOpen(false);
             }}
