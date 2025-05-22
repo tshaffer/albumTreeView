@@ -76,8 +76,8 @@ export default function AlbumTreeView() {
   return (
     <>
       <SimpleTreeView
-        onSelectedItemsChange={(event, ids) => {
-          setSelectedId(ids?.[0] ?? null);
+        onSelectedItemsChange={(event, id) => {
+          setSelectedId(id ?? null);
         }}
         slots={{
           expandIcon: ChevronRight as React.ComponentType<SvgIconProps>,
@@ -153,6 +153,7 @@ export default function AlbumTreeView() {
           <Button onClick={() => setAddGroupDialogOpen(false)}>Cancel</Button>
           <Button
             onClick={() => {
+              console.log('Adding group', newGroupName, selectedId);
               dispatch(addGroup({ name: newGroupName, parentId: selectedId ?? undefined }));
               setNewGroupName('');
               setAddGroupDialogOpen(false);
