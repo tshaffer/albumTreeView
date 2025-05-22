@@ -4,6 +4,10 @@ import { ExpandMore, ChevronRight } from '@mui/icons-material';
 import { AlbumNode } from '../types/AlbumTree';
 import { SvgIconProps } from '@mui/material/SvgIcon';
 
+import { startImport, finishImport } from '../models/importSlice'; // adjust path as needed
+import { RootState } from '../models/store'; // your store’s root type
+import { useDispatch, useSelector } from 'react-redux';
+
 interface Props {
   nodes: AlbumNode[];
 }
@@ -28,7 +32,11 @@ const renderTree = (node: AlbumNode): React.ReactNode => {
 
 export default function AlbumTreeView({ nodes }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [isImporting, setIsImporting] = useState(false);
+  // const [isImporting, setIsImporting] = useState(false);
+
+  const dispatch = useDispatch();
+  const importingAlbumId = useSelector((state: RootState) => state.import.importingAlbumId);
+  const isImporting = selectedId !== null && importingAlbumId === selectedId;
 
   const mockImportAlbum = async (albumId: string): Promise<void> => {
     console.log(`Starting mock import for album ${albumId}`);
@@ -40,8 +48,16 @@ export default function AlbumTreeView({ nodes }: Props) {
     });
   };
 
+  const handleImportClick = async () => {
+    if (!selectedId) return;
+    dispatch(startImport(selectedId));
+    await mockImportAlbum(selectedId);
+    dispatch(finishImport(selectedId));
+  };
+
   return (
     <>
+    
       <SimpleTreeView
         onSelectedItemsChange={(event, ids) => {
           setSelectedId(ids?.[0] ?? null);
@@ -54,18 +70,10 @@ export default function AlbumTreeView({ nodes }: Props) {
         {nodes.map(renderTree)}
       </SimpleTreeView>
 
-      <button
-        onClick={async () => {
-          if (selectedId) {
-            setIsImporting(true);
-            await mockImportAlbum(selectedId);
-            setIsImporting(false);
-          }
-        }}
-        disabled={!selectedId || isImporting}
-      >
+      <button onClick={handleImportClick} disabled={!selectedId || !!importingAlbumId}>
         {isImporting ? 'Importing...' : 'Import'}
       </button>
+
     </>
   );
 }
