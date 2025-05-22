@@ -55,10 +55,12 @@ const albumTreeSlice = createSlice({
       const addToParent = (nodes: AlbumNode[]): boolean => {
         for (const node of nodes) {
           if (node.type === 'group' && node.id === action.payload.parentId) {
-            node.children.push(newGroup);
+            node.children.push(newGroup); // or newAlbum
             return true;
-          } else if (node.type === 'group') {
-            if (addToParent(node.children)) return true;
+          }
+          if (node.type === 'group') {
+            const added = addToParent(node.children);
+            if (added) return true; // bubble up
           }
         }
         return false;
@@ -79,10 +81,12 @@ const albumTreeSlice = createSlice({
       const addToParent = (nodes: AlbumNode[]): boolean => {
         for (const node of nodes) {
           if (node.type === 'group' && node.id === action.payload.parentId) {
-            node.children.push(newAlbum);
+            node.children.push(newAlbum); // or newAlbum
             return true;
-          } else if (node.type === 'group') {
-            if (addToParent(node.children)) return true;
+          }
+          if (node.type === 'group') {
+            const added = addToParent(node.children);
+            if (added) return true; // bubble up
           }
         }
         return false;
