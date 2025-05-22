@@ -2,16 +2,21 @@ import React, { useState } from 'react';
 import { SimpleTreeView, TreeItem } from '@mui/x-tree-view';
 import { ExpandMore, ChevronRight } from '@mui/icons-material';
 import { SvgIconProps } from '@mui/material/SvgIcon';
-import { Snackbar, Alert } from '@mui/material';
+import {
+  Snackbar,
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Button,
+} from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
-import { startImport, finishImport } from '../models/importSlice';
-import { RootState } from '../models/store';
+import { startImport, finishImport } from '../redux/importSlice';
+import { markAlbumImported, addAlbum } from '../redux/albumTreeSlice';
+import { RootState } from '../redux/store';
 import { AlbumNode } from '../types/AlbumTree';
-import { markAlbumImported } from '../models';
-
-interface Props {
-  nodes: AlbumNode[];
-}
 
 const mockImportAlbum = async (albumId: string): Promise<void> => {
   console.log(`Starting mock import for album ${albumId}`);
@@ -24,13 +29,17 @@ const mockImportAlbum = async (albumId: string): Promise<void> => {
 };
 
 export default function AlbumTreeView() {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-
   const dispatch = useDispatch();
+
   const nodes = useSelector((state: RootState) => state.albumTree.nodes);
   const importingAlbumId = useSelector((state: RootState) => state.import.importingAlbumId);
   const completedAlbumImports = useSelector((state: RootState) => state.import.completedAlbumImports);
+
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [newAlbumName, setNewAlbumName] = useState('');
+
   const isImporting = selectedId !== null && importingAlbumId === selectedId;
 
   const handleImportClick = async () => {
@@ -44,9 +53,10 @@ export default function AlbumTreeView() {
 
   const renderTree = (node: AlbumNode): React.ReactNode => {
     const isImported = completedAlbumImports.includes(node.id);
-    const label = node.type === 'group'
-      ? node.name
-      : `${node.name} (${node.mediaCount})${isImported ? ' ✅' : ''}`;
+    const label =
+      node.type === 'group'
+        ? node.name
+        : `${node.name} (${node.mediaCount})${isImported ? ' ✅' : ''}`;
 
     return (
       <TreeItem
@@ -73,12 +83,48 @@ export default function AlbumTreeView() {
         {nodes.map(renderTree)}
       </SimpleTreeView>
 
-      <button
-        onClick={handleImportClick}
-        disabled={!selectedId || !!importingAlbumId}
-      >
-        {isImporting ? 'Importing...' : 'Import'}
-      </button>
+      <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
+        <Button
+          variant="contained"
+          onClick={handleImportClick}
+          disabled={!selectedId || !!importingAlbumId}
+        >
+          {isImporting ? 'Importing...' : 'Import'}
+        </Button>
+
+        <Button
+          variant="outlined"
+          onClick={() => setAddDialogOpen(true)}
+        >
+          Add Album
+        </Button>
+      </div>
+
+      <Dialog open={addDialogOpen} onClose={() => setAddDialogOpen(false)}>
+        <DialogTitle>Add New Album</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            fullWidth
+            label="Album Name"
+            value={newAlbumName}
+            onChange={(e) => setNewAlbumName(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={() => {
+              dispatch(addAlbum({ name: newAlbumName, parentId: selectedId ?? undefined }));
+              setNewAlbumName('');
+              setAddDialogOpen(false);
+            }}
+            disabled={!newAlbumName.trim()}
+          >
+            Add
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Snackbar
         open={snackbarOpen}
