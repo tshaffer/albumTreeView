@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { SimpleTreeView, TreeItem } from '@mui/x-tree-view';
 import { ExpandMore, ChevronRight } from '@mui/icons-material';
 import { AlbumNode } from '../types/AlbumTree';
@@ -26,14 +27,34 @@ const renderTree = (node: AlbumNode) => {
 };
 
 export default function AlbumTreeView({ nodes }: Props) {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
   return (
-    <SimpleTreeView
-      slots={{
-        expandIcon: ChevronRight as React.ComponentType<SvgIconProps>,
-        collapseIcon: ExpandMore as React.ComponentType<SvgIconProps>,
-      }}
-    >
-      {nodes.map(renderTree)}
-    </SimpleTreeView>
+    <>
+      <SimpleTreeView
+        selectedItems={selectedId ? [selectedId] : []}
+        onSelectedItemsChange={(event, ids) => {
+          setSelectedId(ids[0] ?? null); // single selection
+        }}
+        slots={{
+          expandIcon: ChevronRight as React.ComponentType<SvgIconProps>,
+          collapseIcon: ExpandMore as React.ComponentType<SvgIconProps>,
+        }}
+      >
+        {nodes.map(renderTree)}
+      </SimpleTreeView>
+
+      <button
+        onClick={() => {
+          if (selectedId) {
+            console.log(`Import requested for album node: ${selectedId}`);
+            // Trigger import logic here
+          }
+        }}
+        disabled={!selectedId}
+      >
+        Import
+      </button>
+    </>
   );
 }
