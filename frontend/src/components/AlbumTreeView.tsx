@@ -169,6 +169,82 @@ export default function AlbumTreeView() {
         </div>
       )}
 
+      <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
+        <Button
+          variant="contained"
+          onClick={handleImportClick}
+          disabled={!selectedId || !!importingAlbumId}
+        >
+          {isImporting ? 'Importing...' : 'Import'}
+        </Button>
+
+        <Button
+          variant="outlined"
+          onClick={() => setAddDialogOpen(true)}
+        >
+          Add Album
+        </Button>
+
+        <Button
+          variant="outlined"
+          onClick={() => setAddGroupDialogOpen(true)}
+        >
+          Add Group
+        </Button>
+      </div>
+
+      <Dialog open={addDialogOpen} onClose={() => setAddDialogOpen(false)}>
+        <DialogTitle>Add New Album</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            fullWidth
+            label="Album Name"
+            value={newAlbumName}
+            onChange={(e) => setNewAlbumName(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={() => {
+              dispatch(addAlbum({ name: newAlbumName, parentId: selectedId ?? undefined }));
+              setNewAlbumName('');
+              setAddDialogOpen(false);
+            }}
+            disabled={!newAlbumName.trim()}
+          >
+            Add
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={addGroupDialogOpen} onClose={() => setAddGroupDialogOpen(false)}>
+        <DialogTitle>Add New Group</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            fullWidth
+            label="Group Name"
+            value={newGroupName}
+            onChange={(e) => setNewGroupName(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddGroupDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={() => {
+              dispatch(addGroup({ name: newGroupName, parentId: selectedId ?? undefined }));
+              setNewGroupName('');
+              setAddGroupDialogOpen(false);
+            }}
+            disabled={!newGroupName.trim()}
+          >
+            Add
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <Dialog open={moveDialogOpen} onClose={() => setMoveDialogOpen(false)}>
         <DialogTitle>Move Selected Albums or Groups</DialogTitle>
         <DialogContent>
