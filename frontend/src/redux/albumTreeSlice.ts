@@ -33,6 +33,23 @@ export const saveAlbumTree = createAsyncThunk('albumTree/save', async (nodes: Al
   await axios.put('/api/album-tree', { nodes });
 });
 
+export const moveNodeThunk = createAsyncThunk(
+  'albumTree/moveNodeThunk',
+  async ({ nodeId, newParentId }: { nodeId: string; newParentId: string }, thunkAPI) => {
+    const res = await fetch('/api/move-node', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nodeId, newParentId }),
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to move node');
+    }
+
+    return { nodeId, newParentId };
+  }
+);
+
 // ✅ Utility
 const findAndInsert = (
   nodes: AlbumNode[],
@@ -52,6 +69,55 @@ const findAndInsert = (
   return false;
 };
 
+const moveNodeInTree = (
+  nodes: AlbumNode[],
+  nodeId: string,
+  newParentId: string
+): AlbumNode[] => {
+  const deepClone = (nodes: AlbumNode[]): AlbumNode[] =>
+    nodes.map(node => ({
+      ...node,
+      children: node.type === 'group' ? deepClone(node.children) : [],
+    }));
+
+  const [movedNode, remainingNodes] = (function findAndRemove(nodes: AlbumNode[]): [AlbumNode | null, AlbumNode[]] {
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i];
+      if (node.id === nodeId) {
+        return [node, [...nodes.slice(0, i), ...nodes.slice(i + 1)]];
+      }
+      if (node.type === 'group') {
+        const [found, updatedChildren] = findAndRemove(node.children);
+        if (found) {
+          return [found, [
+            ...nodes.slice(0, i),
+            { ...node, children: updatedChildren },
+            ...nodes.slice(i + 1),
+          ]];
+        }
+      }
+    }
+    return [null, nodes];
+  })(deepClone(nodes));
+
+  if (!movedNode) return nodes;
+
+  const insertNode = (nodes: AlbumNode[]): boolean => {
+    for (let node of nodes) {
+      if (node.id === newParentId && node.type === 'group') {
+        node.children.push(movedNode);
+        return true;
+      }
+      if (node.type === 'group' && insertNode(node.children)) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  insertNode(remainingNodes);
+  return remainingNodes;
+};
 // ✅ Slice
 const albumTreeSlice = createSlice({
   name: 'albumTree',
@@ -92,47 +158,10 @@ const albumTreeSlice = createSlice({
       if (!added) state.nodes.push(newGroup);
     },
 
-    moveNode: (state, action) => {
+    moveNode(state, action) {
       const { nodeId, newParentId } = action.payload;
-
-      const findAndRemoveNode = (nodes: AlbumNode[]): [AlbumNode | null, AlbumNode[]] => {
-        for (let i = 0; i < nodes.length; i++) {
-          const node = nodes[i];
-          if (node.id === nodeId) {
-            const updatedNodes = [...nodes.slice(0, i), ...nodes.slice(i + 1)];
-            return [node, updatedNodes];
-          }
-          if (node.type === 'group') {
-            const [found, updatedChildren] = findAndRemoveNode(node.children);
-            if (found) {
-              node.children = updatedChildren;
-              return [found, nodes];
-            }
-          }
-        }
-        return [null, nodes];
-      };
-
-      const insertNode = (nodes: AlbumNode[]): boolean => {
-        for (const node of nodes) {
-          if (node.id === newParentId && node.type === 'group') {
-            node.children.push(movedNode!);
-            return true;
-          }
-          if (node.type === 'group' && insertNode(node.children)) {
-            return true;
-          }
-        }
-        return false;
-      };
-
-      let movedNode: AlbumNode | null;
-      [movedNode, state.nodes] = findAndRemoveNode(state.nodes);
-
-      if (movedNode) {
-        insertNode(state.nodes);
-      }
-    }
+      state.nodes = moveNodeInTree(state.nodes, nodeId, newParentId);
+    },
 
   },
 
@@ -147,6 +176,10 @@ const albumTreeSlice = createSlice({
       })
       .addCase(loadAlbumTree.rejected, state => {
         state.status = 'failed';
+      })
+      .addCase(moveNodeThunk.fulfilled, (state, action) => {
+        const { nodeId, newParentId } = action.payload;
+        state.nodes = moveNodeInTree(state.nodes, nodeId, newParentId);
       });
   },
 });
