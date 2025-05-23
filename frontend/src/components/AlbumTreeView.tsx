@@ -100,12 +100,10 @@ export default function AlbumTreeView() {
             style={{
               color: isImported ? '#999' : 'inherit',
               cursor: 'pointer',
-              backgroundColor: selectedNodeIds.has(node.id) ? '#d0f0ff' : 'transparent',
-              fontWeight: selectedNodeIds.has(node.id) ? 600 : 'normal',
+              backgroundColor: selectedNodeIds.has(node.id) ? '#e0f7fa' : 'transparent',
               borderRadius: 4,
               padding: '2px 6px',
-              display: 'inline-block',
-              boxShadow: selectedNodeIds.has(node.id) ? 'inset 0 0 0 1px #0288d1' : 'none'
+              display: 'inline-block'
             }}
           >
             {label}
@@ -167,11 +165,12 @@ export default function AlbumTreeView() {
           Add Album
         </Button>
 
-        <Button
-          variant="outlined"
-          onClick={() => setAddGroupDialogOpen(true)}
-        >
+        <Button variant="outlined" onClick={() => setAddGroupDialogOpen(true)}>
           Add Group
+        </Button>
+
+        <Button variant="outlined" onClick={() => setSelectedId(null)}>
+          Deselect
         </Button>
       </div>
 
