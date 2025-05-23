@@ -130,8 +130,16 @@ export default function AlbumTreeView() {
       </SimpleTreeView>
 
       {selectedNodeIds.size > 0 && (
-        <div style={{ marginTop: '1rem', padding: '0.5rem 1rem', backgroundColor: '#f0f0f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ marginTop: '1rem', padding: '0.5rem 1rem', backgroundColor: '#f0f0f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
           <span>{selectedNodeIds.size} selected</span>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <Button variant="outlined" onClick={() => setSelectedNodeIds(new Set())}>
+              Clear Selection
+            </Button>
+            <Button variant="contained" onClick={() => setMoveDialogOpen(true)}>
+              Move To…
+            </Button>
+          </div>
           <Button
             variant="contained"
             onClick={() => setMoveDialogOpen(true)}
