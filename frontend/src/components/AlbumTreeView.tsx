@@ -217,13 +217,16 @@ export default function AlbumTreeView() {
             fullWidth
             value={newParentId ?? ''}
             onChange={(e) => setNewParentId(e.target.value)}
-            SelectProps={{ native: true }}
           >
-            <option value="" disabled>Select new parent</option>
+            <MenuItem value="" disabled>
+              Select new parent
+            </MenuItem>
             {nodes
-              .filter(n => n.id !== contextMenuNodeId) // Exclude self
+              .filter(n => n.id !== contextMenuNodeId)
               .map(n => (
-                <option key={n.id} value={n.id}>{n.name}</option>
+                <MenuItem key={n.id} value={n.id}>
+                  {n.name}
+                </MenuItem>
               ))}
           </TextField>
         </DialogContent>
