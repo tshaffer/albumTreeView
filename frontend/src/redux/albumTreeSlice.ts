@@ -91,6 +91,49 @@ const albumTreeSlice = createSlice({
       const added = findAndInsert(state.nodes, action.payload.parentId, newGroup);
       if (!added) state.nodes.push(newGroup);
     },
+
+    moveNode: (state, action) => {
+      const { nodeId, newParentId } = action.payload;
+
+      const findAndRemoveNode = (nodes: AlbumNode[]): [AlbumNode | null, AlbumNode[]] => {
+        for (let i = 0; i < nodes.length; i++) {
+          const node = nodes[i];
+          if (node.id === nodeId) {
+            const updatedNodes = [...nodes.slice(0, i), ...nodes.slice(i + 1)];
+            return [node, updatedNodes];
+          }
+          if (node.type === 'group') {
+            const [found, updatedChildren] = findAndRemoveNode(node.children);
+            if (found) {
+              node.children = updatedChildren;
+              return [found, nodes];
+            }
+          }
+        }
+        return [null, nodes];
+      };
+
+      const insertNode = (nodes: AlbumNode[]): boolean => {
+        for (const node of nodes) {
+          if (node.id === newParentId && node.type === 'group') {
+            node.children.push(movedNode!);
+            return true;
+          }
+          if (node.type === 'group' && insertNode(node.children)) {
+            return true;
+          }
+        }
+        return false;
+      };
+
+      let movedNode: AlbumNode | null;
+      [movedNode, state.nodes] = findAndRemoveNode(state.nodes);
+
+      if (movedNode) {
+        insertNode(state.nodes);
+      }
+    }
+
   },
 
   extraReducers: builder => {

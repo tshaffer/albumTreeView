@@ -235,10 +235,15 @@ export default function AlbumTreeView() {
           <Button
             onClick={() => {
               if (contextMenuNodeId && newParentId) {
-                dispatch({
-                  type: 'albumTree/moveNode',
-                  payload: { nodeId: contextMenuNodeId, newParentId }
-                });
+                fetch('/api/move-node', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ nodeId: contextMenuNodeId, newParentId }),
+                })
+                  .then(res => res.ok && dispatch({
+                    type: 'albumTree/moveNode',
+                    payload: { nodeId: contextMenuNodeId, newParentId }
+                  }));
               }
               setMoveDialogOpen(false);
               setNewParentId(null);
