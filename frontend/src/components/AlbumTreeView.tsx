@@ -11,6 +11,8 @@ import {
   DialogActions,
   TextField,
   Button,
+  Menu,
+  MenuItem,
 } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { startImport, finishImport } from '../redux/importSlice';
@@ -45,6 +47,11 @@ export default function AlbumTreeView() {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [newAlbumName, setNewAlbumName] = useState('');
 
+  const [contextMenuPosition, setContextMenuPosition] = useState<{ mouseX: number; mouseY: number } | null>(null);
+  const [contextMenuNodeId, setContextMenuNodeId] = useState<string | null>(null);
+  const [moveDialogOpen, setMoveDialogOpen] = useState(false);
+  const [newParentId, setNewParentId] = useState<string | null>(null);
+
   React.useEffect(() => {
     if (nodes.length > 0) {
       dispatch(saveAlbumTree(nodes));
@@ -73,7 +80,18 @@ export default function AlbumTreeView() {
       <TreeItem
         key={node.id}
         itemId={node.id}
-        label={<span style={{ color: isImported ? '#999' : 'inherit' }}>{label}</span>}
+        label={
+          <span
+            onContextMenu={(e) => {
+              e.preventDefault();
+              setContextMenuNodeId(node.id);
+              setContextMenuPosition({ mouseX: e.clientX - 2, mouseY: e.clientY - 4 });
+            }}
+            style={{ color: isImported ? '#999' : 'inherit', cursor: 'context-menu' }}
+          >
+            {label}
+          </span>
+        }
       >
         {node.type === 'group' && node.children.map(renderTree)}
       </TreeItem>
@@ -82,6 +100,26 @@ export default function AlbumTreeView() {
 
   return (
     <>
+      <Menu
+        open={!!contextMenuPosition}
+        onClose={() => setContextMenuPosition(null)}
+        anchorReference="anchorPosition"
+        anchorPosition={
+          contextMenuPosition !== null
+            ? { top: contextMenuPosition.mouseY, left: contextMenuPosition.mouseX }
+            : undefined
+        }
+      >
+        <MenuItem
+          onClick={() => {
+            setMoveDialogOpen(true);
+            setContextMenuPosition(null);
+          }}
+        >
+          Move To…
+        </MenuItem>
+      </Menu>
+
       <SimpleTreeView
         onSelectedItemsChange={(event, id) => {
           setSelectedId(id ?? null);
@@ -116,7 +154,6 @@ export default function AlbumTreeView() {
         >
           Add Group
         </Button>
-
       </div>
 
       <Dialog open={addDialogOpen} onClose={() => setAddDialogOpen(false)}>
@@ -160,7 +197,6 @@ export default function AlbumTreeView() {
           <Button onClick={() => setAddGroupDialogOpen(false)}>Cancel</Button>
           <Button
             onClick={() => {
-              console.log('Adding group', newGroupName, selectedId);
               dispatch(addGroup({ name: newGroupName, parentId: selectedId ?? undefined }));
               setNewGroupName('');
               setAddGroupDialogOpen(false);
@@ -172,6 +208,44 @@ export default function AlbumTreeView() {
         </DialogActions>
       </Dialog>
 
+      <Dialog open={moveDialogOpen} onClose={() => setMoveDialogOpen(false)}>
+        <DialogTitle>Move Album or Group</DialogTitle>
+        <DialogContent>
+          <TextField
+            select
+            label="New Parent"
+            fullWidth
+            value={newParentId ?? ''}
+            onChange={(e) => setNewParentId(e.target.value)}
+            SelectProps={{ native: true }}
+          >
+            <option value="" disabled>Select new parent</option>
+            {nodes
+              .filter(n => n.id !== contextMenuNodeId) // Exclude self
+              .map(n => (
+                <option key={n.id} value={n.id}>{n.name}</option>
+              ))}
+          </TextField>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setMoveDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={() => {
+              if (contextMenuNodeId && newParentId) {
+                dispatch({
+                  type: 'albumTree/moveNode',
+                  payload: { nodeId: contextMenuNodeId, newParentId }
+                });
+              }
+              setMoveDialogOpen(false);
+              setNewParentId(null);
+            }}
+            disabled={!newParentId}
+          >
+            Move
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Snackbar
         open={snackbarOpen}
