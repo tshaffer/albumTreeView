@@ -100,10 +100,12 @@ export default function AlbumTreeView() {
             style={{
               color: isImported ? '#999' : 'inherit',
               cursor: 'pointer',
-              backgroundColor: selectedNodeIds.has(node.id) ? '#e0f7fa' : 'transparent',
+              backgroundColor: selectedNodeIds.has(node.id) ? '#d0f0ff' : 'transparent',
+              fontWeight: selectedNodeIds.has(node.id) ? 600 : 'normal',
               borderRadius: 4,
               padding: '2px 6px',
-              display: 'inline-block'
+              display: 'inline-block',
+              boxShadow: selectedNodeIds.has(node.id) ? 'inset 0 0 0 1px #0288d1' : 'none'
             }}
           >
             {label}
