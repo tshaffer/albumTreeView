@@ -20,6 +20,7 @@ import { markAlbumImported, addAlbum, addGroup, saveAlbumTree, moveNodeThunk } f
 import { RootState } from '../redux/store';
 import { AlbumNode } from '../types/AlbumTree';
 import { useAppDispatch } from '../redux/hooks';
+import { getAllGroupNodes } from '../utilities/treeUtils';
 
 const mockImportAlbum = async (albumId: string): Promise<void> => {
   console.log(`Starting mock import for album ${albumId}`);
@@ -221,12 +222,10 @@ export default function AlbumTreeView() {
             <MenuItem value="" disabled>
               Select new parent
             </MenuItem>
-            {nodes
+            {getAllGroupNodes(nodes)
               .filter(n => n.id !== contextMenuNodeId)
               .map(n => (
-                <MenuItem key={n.id} value={n.id}>
-                  {n.name}
-                </MenuItem>
+                <MenuItem key={n.id} value={n.id}>{n.name}</MenuItem>
               ))}
           </TextField>
         </DialogContent>
@@ -236,15 +235,6 @@ export default function AlbumTreeView() {
             onClick={() => {
               if (contextMenuNodeId && newParentId) {
                 dispatch(moveNodeThunk({ nodeId: contextMenuNodeId, newParentId }));
-                // fetch('/api/move-node', {
-                //   method: 'POST',
-                //   headers: { 'Content-Type': 'application/json' },
-                //   body: JSON.stringify({ nodeId: contextMenuNodeId, newParentId }),
-                // })
-                //   .then(res => res.ok && dispatch({
-                //     type: 'albumTree/moveNode',
-                //     payload: { nodeId: contextMenuNodeId, newParentId }
-                //   }));
               }
               setMoveDialogOpen(false);
               setNewParentId(null);

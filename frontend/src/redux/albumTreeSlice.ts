@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
 import { AlbumNode } from '../types/AlbumTree';
+import { insertNode, moveNodeInTree } from '../utilities/treeUtils';
 
 interface AlbumTreeState {
   nodes: AlbumNode[];
@@ -55,81 +56,6 @@ export const moveNodeThunk = createAsyncThunk(
   }
 );
 
-// ✅ Utility
-const findAndInsert = (
-  nodes: AlbumNode[],
-  parentId: string | undefined,
-  newNode: AlbumNode
-): boolean => {
-  for (const node of nodes) {
-    if (node.type === 'group' && node.id === parentId) {
-      node.children.push(newNode);
-      return true;
-    }
-    if (node.type === 'group') {
-      const added = findAndInsert(node.children, parentId, newNode);
-      if (added) return true;
-    }
-  }
-  return false;
-};
-
-const moveNodeInTree = (
-  nodes: AlbumNode[],
-  nodeId: string,
-  newParentId: string
-): AlbumNode[] => {
-  const deepClone = (nodes: AlbumNode[]): AlbumNode[] =>
-    nodes.map(node => {
-      if (node.type === 'group') {
-        return {
-          ...node,
-          children: deepClone(node.children),
-        };
-      } else {
-        return { ...node }; // Leaf album node
-      }
-    });
-
-  const [movedNode, remainingNodes] = (function findAndRemove(nodes: AlbumNode[]): [AlbumNode | null, AlbumNode[]] {
-    for (let i = 0; i < nodes.length; i++) {
-      const node = nodes[i];
-      if (node.id === nodeId) {
-        return [node, [...nodes.slice(0, i), ...nodes.slice(i + 1)]];
-      }
-      if (node.type === 'group') {
-        const [found, updatedChildren] = findAndRemove(node.children);
-        if (found) {
-          return [found, [
-            ...nodes.slice(0, i),
-            { ...node, children: updatedChildren },
-            ...nodes.slice(i + 1),
-          ]];
-        }
-      }
-    }
-    return [null, nodes];
-  })(deepClone(nodes));
-
-  if (!movedNode) return nodes;
-
-  const insertNode = (nodes: AlbumNode[]): boolean => {
-    for (let node of nodes) {
-      if (node.id === newParentId && node.type === 'group') {
-        node.children.push(movedNode);
-        return true;
-      }
-      if (node.type === 'group' && insertNode(node.children)) {
-        return true;
-      }
-    }
-    return false;
-  };
-
-  insertNode(remainingNodes);
-  return remainingNodes;
-};
-// ✅ Slice
 const albumTreeSlice = createSlice({
   name: 'albumTree',
   initialState,
@@ -154,7 +80,7 @@ const albumTreeSlice = createSlice({
         type: 'album',
         mediaCount: 0,
       };
-      const added = findAndInsert(state.nodes, action.payload.parentId, newAlbum);
+      const added = insertNode(state.nodes, action.payload.parentId, newAlbum);
       if (!added) state.nodes.push(newAlbum);
     },
 
@@ -165,7 +91,7 @@ const albumTreeSlice = createSlice({
         type: 'group',
         children: [],
       };
-      const added = findAndInsert(state.nodes, action.payload.parentId, newGroup);
+      const added = insertNode(state.nodes, action.payload.parentId, newGroup);
       if (!added) state.nodes.push(newGroup);
     },
 
@@ -189,7 +115,6 @@ const albumTreeSlice = createSlice({
         state.status = 'failed';
       })
       .addCase(moveNodeThunk.fulfilled, (state, action) => {
-        debugger;
         const { nodeId, newParentId } = action.payload;
         state.nodes = moveNodeInTree(state.nodes, nodeId, newParentId);
       });
