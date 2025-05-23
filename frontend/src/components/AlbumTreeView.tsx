@@ -53,6 +53,8 @@ export default function AlbumTreeView() {
   const [moveDialogOpen, setMoveDialogOpen] = useState(false);
   const [newParentId, setNewParentId] = useState<string | null>(null);
 
+  const [selectedNodeIds, setSelectedNodeIds] = useState<Set<string>>(new Set());
+
   React.useEffect(() => {
     if (nodes.length > 0) {
       dispatch(saveAlbumTree(nodes));
@@ -83,12 +85,34 @@ export default function AlbumTreeView() {
         itemId={node.id}
         label={
           <span
+            onClick={(e) => {
+              if (e.shiftKey || e.metaKey || e.ctrlKey) {
+                setSelectedNodeIds(prev => {
+                  const newSet = new Set(prev);
+                  if (newSet.has(node.id)) {
+                    newSet.delete(node.id);
+                  } else {
+                    newSet.add(node.id);
+                  }
+                  return newSet;
+                });
+              } else {
+                setSelectedId(node.id); // fallback for single click (optional)
+              }
+            }}
             onContextMenu={(e) => {
               e.preventDefault();
               setContextMenuNodeId(node.id);
               setContextMenuPosition({ mouseX: e.clientX - 2, mouseY: e.clientY - 4 });
             }}
-            style={{ color: isImported ? '#999' : 'inherit', cursor: 'context-menu' }}
+            style={{
+              color: isImported ? '#999' : 'inherit',
+              cursor: 'pointer',
+              backgroundColor: selectedNodeIds.has(node.id) ? '#e0f7fa' : 'transparent',
+              borderRadius: 4,
+              padding: '2px 6px',
+              display: 'inline-block'
+            }}
           >
             {label}
           </span>
