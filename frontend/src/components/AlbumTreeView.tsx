@@ -11,7 +11,6 @@ import {
   DialogActions,
   TextField,
   Button,
-  Menu,
   MenuItem,
 } from '@mui/material';
 import { useSelector } from 'react-redux';
@@ -50,8 +49,6 @@ export default function AlbumTreeView() {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [newAlbumName, setNewAlbumName] = useState('');
 
-  const [contextMenuPosition, setContextMenuPosition] = useState<{ mouseX: number; mouseY: number } | null>(null);
-  const [contextMenuNodeId, setContextMenuNodeId] = useState<string | null>(null);
   const [moveDialogOpen, setMoveDialogOpen] = useState(false);
   const [newParentId, setNewParentId] = useState<string | null>(null);
 
@@ -100,11 +97,6 @@ export default function AlbumTreeView() {
                 setSelectedId(node.id);
               }
             }}
-            onContextMenu={(e) => {
-              e.preventDefault();
-              setContextMenuNodeId(node.id);
-              setContextMenuPosition({ mouseX: e.clientX - 2, mouseY: e.clientY - 4 });
-            }}
             style={{
               color: isImported ? '#999' : 'inherit',
               cursor: 'pointer',
@@ -125,26 +117,6 @@ export default function AlbumTreeView() {
 
   return (
     <>
-      <Menu
-        open={!!contextMenuPosition}
-        onClose={() => setContextMenuPosition(null)}
-        anchorReference="anchorPosition"
-        anchorPosition={
-          contextMenuPosition !== null
-            ? { top: contextMenuPosition.mouseY, left: contextMenuPosition.mouseX }
-            : undefined
-        }
-      >
-        <MenuItem
-          onClick={() => {
-            setMoveDialogOpen(true);
-            setContextMenuPosition(null);
-          }}
-        >
-          Move To…
-        </MenuItem>
-      </Menu>
-
       <SimpleTreeView
         onSelectedItemsChange={(event, id) => {
           setSelectedId(id ?? null);
