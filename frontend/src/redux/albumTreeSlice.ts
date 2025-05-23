@@ -18,6 +18,11 @@ interface AddGroupPayload {
   parentId?: string;
 }
 
+interface MoveNodePayload {
+  nodeId: string;
+  newParentId: string;
+}
+
 const initialState: AlbumTreeState = {
   nodes: [],
   status: 'idle',
@@ -36,7 +41,7 @@ export const saveAlbumTree = createAsyncThunk('albumTree/save', async (nodes: Al
 export const moveNodeThunk = createAsyncThunk(
   'albumTree/moveNodeThunk',
   async ({ nodeId, newParentId }: { nodeId: string; newParentId: string }, thunkAPI) => {
-    const res = await fetch('/api/move-node', {
+    const res = await fetch('/api/album-tree/move-node', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nodeId, newParentId }),
@@ -75,10 +80,16 @@ const moveNodeInTree = (
   newParentId: string
 ): AlbumNode[] => {
   const deepClone = (nodes: AlbumNode[]): AlbumNode[] =>
-    nodes.map(node => ({
-      ...node,
-      children: node.type === 'group' ? deepClone(node.children) : [],
-    }));
+    nodes.map(node => {
+      if (node.type === 'group') {
+        return {
+          ...node,
+          children: deepClone(node.children),
+        };
+      } else {
+        return { ...node }; // Leaf album node
+      }
+    });
 
   const [movedNode, remainingNodes] = (function findAndRemove(nodes: AlbumNode[]): [AlbumNode | null, AlbumNode[]] {
     for (let i = 0; i < nodes.length; i++) {
@@ -158,7 +169,7 @@ const albumTreeSlice = createSlice({
       if (!added) state.nodes.push(newGroup);
     },
 
-    moveNode(state, action) {
+    moveNode(state, action: PayloadAction<MoveNodePayload>) {
       const { nodeId, newParentId } = action.payload;
       state.nodes = moveNodeInTree(state.nodes, nodeId, newParentId);
     },
@@ -178,6 +189,7 @@ const albumTreeSlice = createSlice({
         state.status = 'failed';
       })
       .addCase(moveNodeThunk.fulfilled, (state, action) => {
+        debugger;
         const { nodeId, newParentId } = action.payload;
         state.nodes = moveNodeInTree(state.nodes, nodeId, newParentId);
       });
