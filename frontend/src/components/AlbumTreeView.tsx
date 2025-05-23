@@ -50,6 +50,9 @@ export default function AlbumTreeView() {
   const [newAlbumName, setNewAlbumName] = useState('');
 
   const [moveDialogOpen, setMoveDialogOpen] = useState(false);
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [renameTargetId, setRenameTargetId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
   const [newParentId, setNewParentId] = useState<string | null>(null);
 
   React.useEffect(() => {
@@ -115,6 +118,17 @@ export default function AlbumTreeView() {
     );
   };
 
+  const findNodeById = (nodes: AlbumNode[], id: string): AlbumNode | null => {
+    for (const node of nodes) {
+      if (node.id === id) return node;
+      if (node.type === 'group') {
+        const found = findNodeById(node.children, id);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
   return (
     <>
       <SimpleTreeView
@@ -130,22 +144,42 @@ export default function AlbumTreeView() {
       </SimpleTreeView>
 
       {selectedNodeIds.size > 0 && (
-        <div style={{ marginTop: '1rem', padding: '0.5rem 1rem', backgroundColor: '#f0f0f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
+        <div
+          style={{
+            marginTop: '1rem',
+            padding: '0.5rem 1rem',
+            backgroundColor: '#f0f0f0',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: '1rem',
+          }}
+        >
           <span>{selectedNodeIds.size} selected</span>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <Button variant="outlined" onClick={() => setSelectedNodeIds(new Set())}>
               Clear Selection
             </Button>
+            {selectedNodeIds.size === 1 && (
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  const onlyId = Array.from(selectedNodeIds)[0];
+                  const node = findNodeById(nodes, onlyId);
+                  if (node) {
+                    setRenameTargetId(onlyId);
+                    setRenameValue(node.name);
+                    setRenameDialogOpen(true);
+                  }
+                }}
+              >
+                Rename
+              </Button>
+            )}
             <Button variant="contained" onClick={() => setMoveDialogOpen(true)}>
               Move To…
             </Button>
           </div>
-          <Button
-            variant="contained"
-            onClick={() => setMoveDialogOpen(true)}
-          >
-            Move To…
-          </Button>
         </div>
       )}
 
@@ -276,6 +310,35 @@ export default function AlbumTreeView() {
           Successfully imported album!
         </Alert>
       </Snackbar>
+
+      <Dialog open={renameDialogOpen} onClose={() => setRenameDialogOpen(false)}>
+        <DialogTitle>Rename Node</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            fullWidth
+            label="New Name"
+            value={renameValue}
+            onChange={(e) => setRenameValue(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setRenameDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={() => {
+              if (renameTargetId && renameValue.trim()) {
+                dispatch({ type: 'albumTree/renameNode', payload: { nodeId: renameTargetId, newName: renameValue.trim() } });
+                dispatch(saveAlbumTree(nodes));
+              }
+              setRenameDialogOpen(false);
+              setRenameTargetId(null);
+              setRenameValue('');
+            }}
+          >
+            Rename
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }

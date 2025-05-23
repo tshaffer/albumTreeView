@@ -100,6 +100,21 @@ const albumTreeSlice = createSlice({
       state.nodes = moveNodeInTree(state.nodes, nodeId, newParentId);
     },
 
+    renameNode(state, action: PayloadAction<{ nodeId: string; newName: string }>) {
+      const rename = (nodes: AlbumNode[]) => {
+        for (const node of nodes) {
+          if (node.id === action.payload.nodeId) {
+            node.name = action.payload.newName;
+            return true;
+          }
+          if (node.type === 'group') {
+            if (rename(node.children)) return true;
+          }
+        }
+        return false;
+      };
+      rename(state.nodes);
+    }
   },
 
   extraReducers: builder => {
@@ -121,5 +136,5 @@ const albumTreeSlice = createSlice({
   },
 });
 
-export const { addAlbum, addGroup, markAlbumImported } = albumTreeSlice.actions;
+export const { addAlbum, addGroup, markAlbumImported, renameNode } = albumTreeSlice.actions;
 export default albumTreeSlice.reducer;
