@@ -1,17 +1,44 @@
 import React, { useState, useEffect } from 'react';
 import { AppBar, Toolbar, Typography, Container, Button } from '@mui/material';
 import { useAppDispatch } from '../redux/hooks';
-import { loadAlbumTree, deleteNodes, saveAlbumTree, renameNode } from '../redux/albumTreeSlice';
+import { loadAlbumTree, markAlbumImported, addAlbum, addGroup } from '../redux/albumTreeSlice';
 import AlbumTreeView from './AlbumTreeView';
 import ManageMenu from './ManageMenu';
+import { startImport, finishImport } from '../redux/importSlice';
 
 export default function AppShell() {
   const dispatch = useAppDispatch();
   const [selectedNodeIds, setSelectedNodeIds] = useState<Set<string>>(new Set());
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [importingId, setImportingId] = useState<string | null>(null);
+  const [newAlbumName, setNewAlbumName] = useState('');
+  const [newGroupName, setNewGroupName] = useState('');
 
   useEffect(() => {
     dispatch(loadAlbumTree());
   }, [dispatch]);
+
+  const handleImportClick = async () => {
+    if (!selectedId) return;
+    setImportingId(selectedId);
+    dispatch(startImport(selectedId));
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Mock import
+    dispatch(finishImport(selectedId));
+    dispatch(markAlbumImported(selectedId));
+    setImportingId(null);
+  };
+
+  const handleAddAlbum = () => {
+    if (!newAlbumName.trim()) return;
+    dispatch(addAlbum({ name: newAlbumName, parentId: selectedId ?? undefined }));
+    setNewAlbumName('');
+  };
+
+  const handleAddGroup = () => {
+    if (!newGroupName.trim()) return;
+    dispatch(addGroup({ name: newGroupName, parentId: selectedId ?? undefined }));
+    setNewGroupName('');
+  };
 
   const handleClearSelection = () => setSelectedNodeIds(new Set());
 
