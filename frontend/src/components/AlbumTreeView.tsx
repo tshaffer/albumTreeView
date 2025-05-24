@@ -32,6 +32,11 @@ const mockImportAlbum = async (albumId: string): Promise<void> => {
   });
 };
 
+const mockHasContent = (albumId: string): boolean => {
+  // Mock logic: pretend albums with odd-length IDs have content
+  return albumId.length % 2 === 1;
+};
+
 export default function AlbumTreeView() {
   const dispatch = useAppDispatch();
 
@@ -62,6 +67,37 @@ export default function AlbumTreeView() {
   }, [nodes, dispatch]);
 
   const isImporting = selectedId !== null && importingAlbumId === selectedId;
+
+  const hasBlockingAlbums = (nodes: AlbumNode[]): boolean => {
+    for (const node of nodes) {
+      if (node.type === 'album' && mockHasContent(node.id)) {
+        return true;
+      }
+      if (node.type === 'group' && hasBlockingAlbums(node.children)) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  const getNodesByIds = (allNodes: AlbumNode[], ids: Set<string>): AlbumNode[] => {
+    const result: AlbumNode[] = [];
+
+    const traverse = (nodes: AlbumNode[]) => {
+      for (const node of nodes) {
+        if (ids.has(node.id)) {
+          result.push(node);
+        }
+        if (node.type === 'group') {
+          traverse(node.children);
+        }
+      }
+    };
+
+    traverse(allNodes);
+    return result;
+  };
+
 
   const handleImportClick = async () => {
     if (!selectedId) return;
@@ -176,6 +212,52 @@ export default function AlbumTreeView() {
                 Rename
               </Button>
             )}
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={() => {
+                const getNodesByIds = (allNodes: AlbumNode[], ids: Set<string>): AlbumNode[] => {
+                  const result: AlbumNode[] = [];
+                  const traverse = (nodes: AlbumNode[]) => {
+                    for (const node of nodes) {
+                      if (ids.has(node.id)) {
+                        result.push(node);
+                      }
+                      if (node.type === 'group') {
+                        traverse(node.children);
+                      }
+                    }
+                  };
+                  traverse(allNodes);
+                  return result;
+                };
+
+                const hasBlockingAlbums = (nodes: AlbumNode[]): boolean => {
+                  for (const node of nodes) {
+                    if (node.type === 'album' && mockHasContent(node.id)) {
+                      return true;
+                    }
+                    if (node.type === 'group' && hasBlockingAlbums(node.children)) {
+                      return true;
+                    }
+                  }
+                  return false;
+                };
+
+                const nodesToDelete = getNodesByIds(nodes, selectedNodeIds);
+                const hasBlocked = hasBlockingAlbums(nodesToDelete);
+                if (hasBlocked) {
+                  alert('One or more selected items contain albums with content. Cannot delete.');
+                  return;
+                }
+
+                dispatch({ type: 'albumTree/deleteNodes', payload: Array.from(selectedNodeIds) });
+                dispatch(saveAlbumTree(nodes));
+                setSelectedNodeIds(new Set());
+              }}
+            >
+              Delete
+            </Button>
             <Button variant="contained" onClick={() => setMoveDialogOpen(true)}>
               Move To…
             </Button>
@@ -192,10 +274,7 @@ export default function AlbumTreeView() {
           {isImporting ? 'Importing...' : 'Import'}
         </Button>
 
-        <Button
-          variant="outlined"
-          onClick={() => setAddDialogOpen(true)}
-        >
+        <Button variant="outlined" onClick={() => setAddDialogOpen(true)}>
           Add Album
         </Button>
 

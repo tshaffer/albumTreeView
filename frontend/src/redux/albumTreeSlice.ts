@@ -114,7 +114,24 @@ const albumTreeSlice = createSlice({
         return false;
       };
       rename(state.nodes);
+    },
+
+    deleteNodes(state, action: PayloadAction<string[]>) {
+      const idsToDelete = new Set(action.payload);
+
+      const filterTree = (nodes: AlbumNode[]): AlbumNode[] => {
+        return nodes
+          .filter(node => !idsToDelete.has(node.id))
+          .map(node =>
+            node.type === 'group'
+              ? { ...node, children: filterTree(node.children) }
+              : node
+          );
+      };
+
+      state.nodes = filterTree(state.nodes);
     }
+
   },
 
   extraReducers: builder => {
@@ -136,5 +153,5 @@ const albumTreeSlice = createSlice({
   },
 });
 
-export const { addAlbum, addGroup, markAlbumImported, renameNode } = albumTreeSlice.actions;
+export const { addAlbum, addGroup, markAlbumImported, renameNode, deleteNodes } = albumTreeSlice.actions;
 export default albumTreeSlice.reducer;
