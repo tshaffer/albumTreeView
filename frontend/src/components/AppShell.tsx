@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AppBar, Toolbar, Typography, Container } from '@mui/material';
+import { AppBar, Toolbar, Typography, Container, Button } from '@mui/material';
 import { useAppDispatch } from '../redux/hooks';
 import { loadAlbumTree, deleteNodes, saveAlbumTree, renameNode } from '../redux/albumTreeSlice';
 import AlbumTreeView from './AlbumTreeView';
@@ -37,21 +37,20 @@ export default function AppShell() {
 
   return (
     <>
-      <AppBar position="static">
+      <ManageMenu
+        selectionCount={selectedNodeIds.size}
+        onClearSelection={handleClearSelection}
+        onMove={handleMove}
+        onRename={handleRename}
+        onDelete={handleDelete}
+      />
+      {/* <AppBar position="static">
         <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
           <Typography variant="h6">
             Shafferography Album Manager
           </Typography>
-
-          <ManageMenu
-            selectionCount={selectedNodeIds.size}
-            onClearSelection={handleClearSelection}
-            onMove={handleMove}
-            onRename={handleRename}
-            onDelete={handleDelete}
-          />
         </Toolbar>
-      </AppBar>
+      </AppBar> */}
 
       <Container>
         <AlbumTreeView
