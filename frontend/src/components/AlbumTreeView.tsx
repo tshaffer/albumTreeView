@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SimpleTreeView, TreeItem } from '@mui/x-tree-view';
 import { ExpandMore, ChevronRight } from '@mui/icons-material';
 import { SvgIconProps } from '@mui/material/SvgIcon';
@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { startImport, finishImport } from '../redux/importSlice';
-import { markAlbumImported, addAlbum, addGroup, saveAlbumTree } from '../redux/albumTreeSlice';
+import { markAlbumImported, addAlbum, addGroup, saveAlbumTree, deleteNodes, renameNode } from '../redux/albumTreeSlice';
 import { moveNodeThunk } from '../redux/albumTreeSlice';
 import { RootState } from '../redux/store';
 import { AlbumNode } from '../types/AlbumTree';
@@ -33,11 +33,15 @@ const mockImportAlbum = async (albumId: string): Promise<void> => {
 };
 
 const mockHasContent = (albumId: string): boolean => {
-  // Mock logic: pretend albums with odd-length IDs have content
   return albumId.length % 2 === 1;
 };
 
-export default function AlbumTreeView() {
+interface AlbumTreeViewProps {
+  selectedNodeIds: Set<string>;
+  setSelectedNodeIds: React.Dispatch<React.SetStateAction<Set<string>>>;
+}
+
+export default function AlbumTreeView({ selectedNodeIds, setSelectedNodeIds }: AlbumTreeViewProps) {
   const dispatch = useAppDispatch();
 
   const nodes = useSelector((state: RootState) => state.albumTree.nodes);
@@ -45,7 +49,6 @@ export default function AlbumTreeView() {
   const completedAlbumImports = useSelector((state: RootState) => state.import.completedAlbumImports);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [selectedNodeIds, setSelectedNodeIds] = useState<Set<string>>(new Set());
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   const [addGroupDialogOpen, setAddGroupDialogOpen] = useState(false);
@@ -60,7 +63,44 @@ export default function AlbumTreeView() {
   const [renameValue, setRenameValue] = useState('');
   const [newParentId, setNewParentId] = useState<string | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
+    const handleMoveDialog = () => setMoveDialogOpen(true);
+
+    const handleRenameDialog = (e: any) => {
+      const { nodeId } = e.detail;
+      const node = findNodeById(nodes, nodeId);
+      if (node) {
+        setRenameTargetId(nodeId);
+        setRenameValue(node.name);
+        setRenameDialogOpen(true);
+      }
+    };
+
+    const handleDeleteNodes = (e: any) => {
+      const { nodeIds } = e.detail;
+      const nodesToDelete = getNodesByIds(nodes, new Set(nodeIds));
+      const hasBlocked = hasBlockingAlbums(nodesToDelete);
+      if (hasBlocked) {
+        alert('One or more selected items contain albums with content. Cannot delete.');
+        return;
+      }
+
+      dispatch(deleteNodes(nodeIds));
+      dispatch(saveAlbumTree(nodes));
+    };
+
+    window.addEventListener('open-move-dialog', handleMoveDialog);
+    window.addEventListener('open-rename-dialog', handleRenameDialog);
+    window.addEventListener('delete-nodes', handleDeleteNodes);
+
+    return () => {
+      window.removeEventListener('open-move-dialog', handleMoveDialog);
+      window.removeEventListener('open-rename-dialog', handleRenameDialog);
+      window.removeEventListener('delete-nodes', handleDeleteNodes);
+    };
+  }, [nodes, dispatch]);
+
+  useEffect(() => {
     if (nodes.length > 0) {
       dispatch(saveAlbumTree(nodes));
     }
@@ -82,7 +122,6 @@ export default function AlbumTreeView() {
 
   const getNodesByIds = (allNodes: AlbumNode[], ids: Set<string>): AlbumNode[] => {
     const result: AlbumNode[] = [];
-
     const traverse = (nodes: AlbumNode[]) => {
       for (const node of nodes) {
         if (ids.has(node.id)) {
@@ -93,11 +132,9 @@ export default function AlbumTreeView() {
         }
       }
     };
-
     traverse(allNodes);
     return result;
   };
-
 
   const handleImportClick = async () => {
     if (!selectedId) return;
@@ -179,92 +216,6 @@ export default function AlbumTreeView() {
         {nodes.map(renderTree)}
       </SimpleTreeView>
 
-      {selectedNodeIds.size > 0 && (
-        <div
-          style={{
-            marginTop: '1rem',
-            padding: '0.5rem 1rem',
-            backgroundColor: '#f0f0f0',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            gap: '1rem',
-          }}
-        >
-          <span>{selectedNodeIds.size} selected</span>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <Button variant="outlined" onClick={() => setSelectedNodeIds(new Set())}>
-              Clear Selection
-            </Button>
-            {selectedNodeIds.size === 1 && (
-              <Button
-                variant="outlined"
-                onClick={() => {
-                  const onlyId = Array.from(selectedNodeIds)[0];
-                  const node = findNodeById(nodes, onlyId);
-                  if (node) {
-                    setRenameTargetId(onlyId);
-                    setRenameValue(node.name);
-                    setRenameDialogOpen(true);
-                  }
-                }}
-              >
-                Rename
-              </Button>
-            )}
-            <Button
-              variant="outlined"
-              color="error"
-              onClick={() => {
-                const getNodesByIds = (allNodes: AlbumNode[], ids: Set<string>): AlbumNode[] => {
-                  const result: AlbumNode[] = [];
-                  const traverse = (nodes: AlbumNode[]) => {
-                    for (const node of nodes) {
-                      if (ids.has(node.id)) {
-                        result.push(node);
-                      }
-                      if (node.type === 'group') {
-                        traverse(node.children);
-                      }
-                    }
-                  };
-                  traverse(allNodes);
-                  return result;
-                };
-
-                const hasBlockingAlbums = (nodes: AlbumNode[]): boolean => {
-                  for (const node of nodes) {
-                    if (node.type === 'album' && mockHasContent(node.id)) {
-                      return true;
-                    }
-                    if (node.type === 'group' && hasBlockingAlbums(node.children)) {
-                      return true;
-                    }
-                  }
-                  return false;
-                };
-
-                const nodesToDelete = getNodesByIds(nodes, selectedNodeIds);
-                const hasBlocked = hasBlockingAlbums(nodesToDelete);
-                if (hasBlocked) {
-                  alert('One or more selected items contain albums with content. Cannot delete.');
-                  return;
-                }
-
-                dispatch({ type: 'albumTree/deleteNodes', payload: Array.from(selectedNodeIds) });
-                dispatch(saveAlbumTree(nodes));
-                setSelectedNodeIds(new Set());
-              }}
-            >
-              Delete
-            </Button>
-            <Button variant="contained" onClick={() => setMoveDialogOpen(true)}>
-              Move To…
-            </Button>
-          </div>
-        </div>
-      )}
-
       <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
         <Button
           variant="contained"
@@ -286,6 +237,7 @@ export default function AlbumTreeView() {
           Deselect
         </Button>
       </div>
+
 
       <Dialog open={addDialogOpen} onClose={() => setAddDialogOpen(false)}>
         <DialogTitle>Add New Album</DialogTitle>
