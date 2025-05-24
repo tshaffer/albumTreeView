@@ -216,29 +216,6 @@ export default function AlbumTreeView({ selectedNodeIds, setSelectedNodeIds }: A
         {nodes.map(renderTree)}
       </SimpleTreeView>
 
-      <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
-        <Button
-          variant="contained"
-          onClick={handleImportClick}
-          disabled={!selectedId || !!importingAlbumId}
-        >
-          {isImporting ? 'Importing...' : 'Import'}
-        </Button>
-
-        <Button variant="outlined" onClick={() => setAddDialogOpen(true)}>
-          Add Album
-        </Button>
-
-        <Button variant="outlined" onClick={() => setAddGroupDialogOpen(true)}>
-          Add Group
-        </Button>
-
-        <Button variant="outlined" onClick={() => setSelectedId(null)}>
-          Deselect
-        </Button>
-      </div>
-
-
       <Dialog open={addDialogOpen} onClose={() => setAddDialogOpen(false)}>
         <DialogTitle>Add New Album</DialogTitle>
         <DialogContent>
