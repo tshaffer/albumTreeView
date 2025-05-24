@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { Provider } from 'react-redux';
 import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
-import AppShell from './components/AppShell';
+import App from './components/App';
 import { store } from './redux/store';
 
 const theme = createTheme();
@@ -17,7 +17,7 @@ root.render(
     <Provider store={store}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <AppShell />
+        <App />
       </ThemeProvider>
     </Provider>
   </React.StrictMode>
