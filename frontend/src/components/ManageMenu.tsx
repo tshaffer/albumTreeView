@@ -27,9 +27,11 @@ export default function ManageMenu({
     setAnchorEl(null);
   };
 
+  console.log('ManageMenu selectionCount:', selectionCount);
+
   return (
     <>
-      <Button variant="outlined" onClick={handleClick} disabled={selectionCount === 0}>
+      <Button style={{ minWidth: 200 }} variant="outlined"  disabled={selectionCount === 0} onClick={handleClick}>
         Manage ({selectionCount})
       </Button>
       <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>

@@ -38,10 +38,11 @@ export default function AppShell() {
   return (
     <>
       <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" style={{ flexGrow: 1 }}>
+        <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
+          <Typography variant="h6">
             Shafferography Album Manager
           </Typography>
+
           <ManageMenu
             selectionCount={selectedNodeIds.size}
             onClearSelection={handleClearSelection}
